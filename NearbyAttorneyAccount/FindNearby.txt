@@ -1,0 +1,29 @@
+global with sharing class FindNearby {
+
+    public FindNearby(ApexPages.StandardController sc) { }
+    
+    @RemoteAction
+    // Find Accounts nearest a geolocation
+    global static List<Account> getNearby(String lat, String lon) {
+
+        // If geolocation isn't set, use Eindhoven (or any other city)
+        // Put a default location latitue and longitude here, this could be where you are located the most
+        // and will only be used as a backup if the browser can not get your location details
+        if(lat == null || lon == null || lat.equals('') || lon.equals('')) {
+            lat = '51.096214';
+            lon = '3.683153';
+        }
+
+        // SOQL query to get the nearest attorney accounts
+        
+        String queryString =
+            'SELECT Id, Name, Location__Longitude__s, Location__Latitude__s, BillingStreet, Phone, BillingCity ' +
+            'FROM Account ' +
+            'WHERE RecordType.Name = \'Attorney\' AND DISTANCE(Location__c, GEOLOCATION('+lat+','+lon+'), \'km\') < 60 ' +
+            'ORDER BY DISTANCE(Location__c, GEOLOCATION('+lat+','+lon+'), \'km\') ' +
+            'LIMIT 3';	
+
+        // Run and return the query results
+        return(database.Query(queryString));
+    }
+}
